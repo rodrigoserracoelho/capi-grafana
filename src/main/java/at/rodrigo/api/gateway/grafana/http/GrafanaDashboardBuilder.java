@@ -114,7 +114,7 @@ public class GrafanaDashboardBuilder {
     private Response createDashboard(GrafanaDashboard grafanaDashboard) throws IOException {
         OkHttpClient client = new OkHttpClient();
         ObjectMapper objectMapper = new ObjectMapper();
-        RequestBody requestBody = RequestBody.create(objectMapper.writeValueAsString(grafanaDashboard), MediaType.parse(GrafanaConstants.APPLICATION_TYPE_JSON));
+        RequestBody requestBody = RequestBody.create(MediaType.parse(GrafanaConstants.APPLICATION_TYPE_JSON), objectMapper.writeValueAsString(grafanaDashboard));
 
         Request.Builder requestBuilder = new Request.Builder().url(grafanaEndpoint);
         if(basicAuthorization && grafanaUser != null && grafanaPassword != null) {
