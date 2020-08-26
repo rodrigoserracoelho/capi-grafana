@@ -49,6 +49,10 @@ public class GrafanaDashboardBuilder {
         dashboard.setOverwrite(false);
         dashboard.setPanels(panels);
 
+        for(int i=0; i<dashboard.getPanels().size(); i++) {
+            dashboard.getPanels().get(i).setId(i);
+        }
+
         GrafanaDashboard grafanaDashboard = new GrafanaDashboard();
         grafanaDashboard.setDashboard(dashboard);
         try {
@@ -56,14 +60,14 @@ public class GrafanaDashboardBuilder {
             if(!response.isSuccessful()) {
                 log.info(GrafanaConstants.GRAFANA_API_CALL_ERROR, response.body().string());
             }
+            response.close();
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         }
     }
 
-    public Panel buildPanelObject(int panelId, String routeID, String panelTitle) {
+    public Panel buildPanelObject(String routeID, String panelTitle) {
         Panel panel = new Panel();
-        panel.setId(panelId);
         panel.setDatasource(grafanaDataSource);
 
         Defaults defaults = new Defaults();
