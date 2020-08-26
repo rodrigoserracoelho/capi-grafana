@@ -17,22 +17,20 @@ public class GrafanaDashboardBuilder {
     private String grafanaUser;
     private String grafanaPassword;
     private String grafanaToken;
+    private String grafanaDataSource;
 
-    public GrafanaDashboardBuilder(String grafanaEndpoint, boolean basicAuthorization, String grafanaUser, String grafanaPassword, String grafanaToken) {
+    public GrafanaDashboardBuilder(String grafanaEndpoint, boolean basicAuthorization, String grafanaUser, String grafanaPassword, String grafanaToken, String grafanaDataSource) {
         this.grafanaEndpoint = grafanaEndpoint;
         this.basicAuthorization = basicAuthorization;
         this.grafanaUser = grafanaUser;
         this.grafanaPassword = grafanaPassword;
         this.grafanaToken = grafanaToken;
+        this.grafanaDataSource = grafanaDataSource;
     }
 
     public void buildDashboardObject(String title,
                                List<String> tags,
-                               String refresh,
-                               String datasource,
-                               Integer panelId,
-                               String expression,
-                               String panelTitle) {
+                               List<Panel> panels) {
 
         Dashboard dashboard = new Dashboard();
         dashboard.setTitle(title);
@@ -40,7 +38,7 @@ public class GrafanaDashboardBuilder {
         dashboard.setTimezone(GrafanaConstants.BROWSER);
         dashboard.setSchemaVersion(GrafanaConstants.SCHEMA_VERSION);
         dashboard.setVersion(GrafanaConstants.DASHBOARD_VERSION);
-        dashboard.setRefresh(refresh);
+        dashboard.setRefresh(GrafanaConstants.REFRESH);
 
         Time time = new Time();
         time.setFrom(GrafanaConstants.DEFAULT_TIME_FROM);
@@ -49,9 +47,24 @@ public class GrafanaDashboardBuilder {
         dashboard.setTime(time);
         dashboard.setFolderId(GrafanaConstants.FOLDER_ID);
         dashboard.setOverwrite(false);
+        dashboard.setPanels(panels);
 
+        GrafanaDashboard grafanaDashboard = new GrafanaDashboard();
+        grafanaDashboard.setDashboard(dashboard);
+        try {
+            Response response = createDashboard(grafanaDashboard);
+            if(!response.isSuccessful()) {
+                log.info(GrafanaConstants.GRAFANA_API_CALL_ERROR, response.body().string());
+            }
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        }
+    }
+
+    public Panel buildPanelObject(int panelId, String routeID, String panelTitle) {
         Panel panel = new Panel();
-        panel.setDatasource(datasource);
+        panel.setId(panelId);
+        panel.setDatasource(grafanaDataSource);
 
         Defaults defaults = new Defaults();
         defaults.setDecimals(GrafanaConstants.DEFAULT_DECIMAL_VALUE);
@@ -68,7 +81,6 @@ public class GrafanaDashboardBuilder {
         gridPos.setY(GrafanaConstants.DEFAULT_GRIS_POS_Y);
 
         panel.setGridPos(gridPos);
-        panel.setId(panelId);
 
         Options options = new Options();
         options.setColorMode(GrafanaConstants.COLOR_MODE);
@@ -80,7 +92,7 @@ public class GrafanaDashboardBuilder {
         panel.setPluginVersion(GrafanaConstants.PLUGIN_VERSION);
 
         Target target = new Target();
-        target.setExpr(expression);
+        target.setExpr(buildExpression(routeID));
         target.setInterval("");
         target.setLegendFormat("");
         target.setRefId(GrafanaConstants.DEFAULT_REF_ID);
@@ -92,22 +104,11 @@ public class GrafanaDashboardBuilder {
         panel.setTitle(panelTitle);
         panel.setType(GrafanaConstants.PANEL_TYPE);
 
-        List<Panel> panels = new ArrayList<>();
-        panels.add(panel);
+        return panel;
+    }
 
-        dashboard.setPanels(panels);
-
-        GrafanaDashboard grafanaDashboard = new GrafanaDashboard();
-        grafanaDashboard.setDashboard(dashboard);
-
-        try {
-            Response response = createDashboard(grafanaDashboard);
-            if(!response.isSuccessful()) {
-                log.info(GrafanaConstants.GRAFANA_API_CALL_ERROR, response.body().string());
-            }
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
-        }
+    private String buildExpression(String routeID) {
+        return "increase(" + routeID + "_total[24h])";
     }
 
     private Response createDashboard(GrafanaDashboard grafanaDashboard) throws IOException {

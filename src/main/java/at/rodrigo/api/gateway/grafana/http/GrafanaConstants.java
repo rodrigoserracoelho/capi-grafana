@@ -10,6 +10,7 @@ public class GrafanaConstants {
     public static final int FOLDER_ID = 0;
     public static final String PLUGIN_VERSION = "7.0.0";
     public static final String PANEL_TYPE = "graph";
+    public static final String REFRESH = "5s";
 
     public static final int DEFAULT_GRIS_POS_H = 9;
     public static final int DEFAULT_GRIS_POS_W = 12;
@@ -27,6 +28,4 @@ public class GrafanaConstants {
     public static final String BEARER = "Bearer ";
     public static final String APPLICATION_TYPE_JSON = "application/json";
     public static final String GRAFANA_API_CALL_ERROR = "Error creating Grafana Dashboard. Error: {}";
-
-
 }
